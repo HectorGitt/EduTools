@@ -206,7 +206,7 @@ export default function Home() {
                     value={course.name}
                     onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
                     placeholder="Course Name (Optional)"
-                    className="w-full bg-transparent border-none p-0 text-white placeholder:text-neutral-700 focus:ring-0 text-base font-medium"
+                    className="w-full bg-transparent border-none p-0 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-0 text-base font-medium"
                   />
                 </div>
 
