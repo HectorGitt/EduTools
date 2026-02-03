@@ -5,7 +5,6 @@ import { Plus, Trash2, Calculator, BookOpen, GraduationCap, Settings } from 'luc
 
 interface Course {
   id: string;
-  name: string;
   grade: string;
   units: number | '';
 }
@@ -22,7 +21,7 @@ const GRADE_POINTS_4: Record<string, number> = {
 
 export default function Home() {
   const [courses, setCourses] = useState<Course[]>([
-    { id: '1', name: '', grade: 'A', units: '' },
+    { id: '1', grade: 'A', units: '' },
   ]);
   const [oldPoints, setOldPoints] = useState<number | ''>('');
   const [oldTNU, setOldTNU] = useState<number | ''>('');
@@ -30,7 +29,7 @@ export default function Home() {
   const [gradingSystem, setGradingSystem] = useState<GradingSystem>('5');
 
   const addCourse = () => {
-    setCourses([...courses, { id: crypto.randomUUID(), name: '', grade: 'A', units: '' }]);
+    setCourses([...courses, { id: crypto.randomUUID(), grade: 'A', units: '' }]);
   };
 
   const removeCourse = (id: string) => {
@@ -196,24 +195,13 @@ export default function Home() {
                 key={course.id}
                 className="group grid grid-cols-12 gap-3 md:gap-4 items-center p-4 bg-black/20 border border-white/5 rounded-2xl hover:border-white/10 transition-all duration-300"
               >
-                {/* Index - Hidden on mobile */}
+                {/* Index - Hidden on mobile, 1 col on desktop */}
                 <div className="hidden md:block md:col-span-1 text-neutral-600 font-mono text-sm pl-2">
                   {(index + 1).toString().padStart(2, '0')}
                 </div>
 
-                {/* Course Name - Full width on mobile, 6 cols on desktop */}
-                <div className="col-span-12 md:col-span-6">
-                  <input
-                    type="text"
-                    value={course.name}
-                    onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
-                    placeholder="Course Name (Optional)"
-                    className="w-full bg-transparent border-none p-0 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-0 text-base font-medium"
-                  />
-                </div>
-
-                {/* Grade - 5 cols on mobile, 2 on desktop */}
-                <div className="col-span-5 md:col-span-2 relative">
+                {/* Grade - 5 cols on mobile, 5 on desktop */}
+                <div className="col-span-5 md:col-span-5 relative">
                   <select
                     value={course.grade}
                     onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
@@ -227,8 +215,8 @@ export default function Home() {
                   </select>
                 </div>
 
-                {/* Unit - 5 cols on mobile, 2 on desktop */}
-                <div className="col-span-5 md:col-span-2">
+                {/* Unit - 5 cols on mobile, 5 on desktop */}
+                <div className="col-span-5 md:col-span-5">
                   <input
                     type="number"
                     value={course.units}
