@@ -1,25 +1,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Calculator, BookOpen, GraduationCap, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Calculator, BookOpen, GraduationCap, Settings } from 'lucide-react';
 
 interface Course {
   id: string;
   name: string;
-  grade: number;
-  units: number;
+  grade: string;
+  units: number | '';
 }
+
+type GradingSystem = '5' | '4';
+
+const GRADE_POINTS_5: Record<string, number> = {
+  'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1, 'F': 0
+};
+
+const GRADE_POINTS_4: Record<string, number> = {
+  'A': 4, 'B': 3, 'C': 2, 'D': 1, 'F': 0
+};
 
 export default function Home() {
   const [courses, setCourses] = useState<Course[]>([
-    { id: '1', name: '', grade: 0, units: 0 },
+    { id: '1', name: '', grade: 'A', units: '' },
   ]);
   const [oldPoints, setOldPoints] = useState<number | ''>('');
   const [oldTNU, setOldTNU] = useState<number | ''>('');
   const [cgpa, setCgpa] = useState<number | null>(null);
+  const [gradingSystem, setGradingSystem] = useState<GradingSystem>('5');
 
   const addCourse = () => {
-    setCourses([...courses, { id: crypto.randomUUID(), name: '', grade: 0, units: 0 }]);
+    setCourses([...courses, { id: crypto.randomUUID(), name: '', grade: 'A', units: '' }]);
   };
 
   const removeCourse = (id: string) => {
@@ -32,23 +43,36 @@ export default function Home() {
     );
   };
 
-  const calculateCGPA = () => {
-    const currentPoints = courses.reduce((acc, curr) => acc + (curr.grade * curr.units), 0);
-    const currentUnits = courses.reduce((acc, curr) => acc + Number(curr.units), 0);
-
-    const prevPoints = Number(oldPoints) || 0;
-    const prevTNU = Number(oldTNU) || 0;
-
-    const totalPoints = prevPoints + currentPoints;
-    const totalUnits = prevTNU + currentUnits;
-
-    if (totalUnits === 0) {
-      setCgpa(0);
-      return;
-    }
-
-    setCgpa(totalPoints / totalUnits);
+  const getPoint = (grade: string) => {
+    const points = gradingSystem === '5' ? GRADE_POINTS_5 : GRADE_POINTS_4;
+    return points[grade as keyof typeof points] || 0;
   };
+
+  useEffect(() => {
+    const calculate = () => {
+      const currentPoints = courses.reduce((acc, curr) => {
+        const units = Number(curr.units) || 0;
+        return acc + (getPoint(curr.grade) * units);
+      }, 0);
+
+      const currentUnits = courses.reduce((acc, curr) => acc + (Number(curr.units) || 0), 0);
+
+      const prevPoints = Number(oldPoints) || 0;
+      const prevTNU = Number(oldTNU) || 0;
+
+      const totalPoints = prevPoints + currentPoints;
+      const totalUnits = prevTNU + currentUnits;
+
+      if (totalUnits === 0) {
+        setCgpa(null);
+        return;
+      }
+
+      setCgpa(totalPoints / totalUnits);
+    };
+
+    calculate();
+  }, [courses, oldPoints, oldTNU, gradingSystem]);
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-purple-500/30 selection:text-purple-200 font-sans">
@@ -66,6 +90,23 @@ export default function Home() {
             Effortlessly calculate your Cumulative Grade Point Average with precision.
           </p>
         </header>
+
+        <div className="mb-8 flex justify-center">
+          <div className="inline-flex bg-neutral-900/80 backdrop-blur-md p-1 rounded-xl border border-white/10">
+            <button
+              onClick={() => setGradingSystem('5')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${gradingSystem === '5' ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25' : 'text-neutral-400 hover:text-white'}`}
+            >
+              5 Point System
+            </button>
+            <button
+              onClick={() => setGradingSystem('4')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${gradingSystem === '4' ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25' : 'text-neutral-400 hover:text-white'}`}
+            >
+              4 Point System
+            </button>
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Previous Data Section */}
@@ -85,9 +126,9 @@ export default function Home() {
                 <input
                   type="number"
                   value={oldPoints}
-                  onChange={(e) => setOldPoints(Number(e.target.value))}
+                  onChange={(e) => setOldPoints(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="e.g., 150"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 />
               </div>
 
@@ -98,9 +139,9 @@ export default function Home() {
                 <input
                   type="number"
                   value={oldTNU}
-                  onChange={(e) => setOldTNU(Number(e.target.value))}
+                  onChange={(e) => setOldTNU(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="e.g., 30"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 />
               </div>
             </div>
@@ -117,7 +158,7 @@ export default function Home() {
               </div>
               {cgpa !== null && (
                 <div className="text-neutral-400 pt-2">
-                  Based on existing input logic
+                  Calculated automatically
                 </div>
               )}
             </div>
@@ -164,28 +205,33 @@ export default function Home() {
                     type="text"
                     value={course.name}
                     onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
-                    placeholder="Course Name"
+                    placeholder="Course Name (Optional)"
                     className="w-full bg-transparent border-none p-0 text-white placeholder:text-neutral-700 focus:ring-0 text-base font-medium"
                   />
                 </div>
 
-                <div className="col-span-2 md:col-span-2">
-                  <input
-                    type="number"
-                    value={course.grade || ''}
-                    onChange={(e) => updateCourse(course.id, 'grade', Number(e.target.value))}
-                    placeholder="Pt"
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-center text-white placeholder:text-neutral-700 focus:outline-none focus:border-purple-500/50 transition-colors"
-                  />
+                <div className="col-span-2 md:col-span-2 relative">
+                  <select
+                    value={course.grade}
+                    onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
+                    className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-center text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all cursor-pointer"
+                  >
+                    {Object.keys(gradingSystem === '5' ? GRADE_POINTS_5 : GRADE_POINTS_4).map(grade => (
+                      <option key={grade} value={grade} className="bg-neutral-900 text-white">
+                        {grade}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Custom arrow could go here if appearance-none is used, but kept simple for now */}
                 </div>
 
                 <div className="col-span-2 md:col-span-2">
                   <input
                     type="number"
-                    value={course.units || ''}
-                    onChange={(e) => updateCourse(course.id, 'units', Number(e.target.value))}
+                    value={course.units}
+                    onChange={(e) => updateCourse(course.id, 'units', e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Unit"
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-center text-white placeholder:text-neutral-700 focus:outline-none focus:border-purple-500/50 transition-colors"
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-center text-white placeholder:text-neutral-700 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                   />
                 </div>
 
@@ -200,16 +246,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-
-          <div className="mt-8 flex justify-end">
-            <button
-              onClick={calculateCGPA}
-              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Calculate Results
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
+          {/* Removed Calculate Button */}
         </section>
 
       </div>
